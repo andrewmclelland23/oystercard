@@ -2,6 +2,8 @@ require 'oystercard'
 
 describe Oystercard do
 
+  let(:station) { double :station }
+
     describe ':balance' do
 
     it 'has a balance of 0 when initialized' do
@@ -32,19 +34,25 @@ describe Oystercard do
 
     describe '#touch_in' do
 
-      it 'should be in journey when touched in' do
+            it 'should be in journey when touched in' do
         subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in
+        subject.touch_in(station)
         expect(subject).to be_in_journey
       end
 
       it 'should raise an error if balance is zero' do
-        expect { subject.touch_in }.to raise_error 'Insufficient funds'
+        expect { subject.touch_in(station) }.to raise_error 'Insufficient funds'
       end
 
       it 'should raise an error if less than minimum balance' do
         subject.top_up(0.5)
-        expect { subject.touch_in }.to raise_error 'Insufficient funds'
+        expect { subject.touch_in(station) }.to raise_error 'Insufficient funds'
+      end
+
+      it 'should store entry station' do
+        subject.top_up(Oystercard::MAXIMUM_BALANCE)
+        subject.touch_in(station)
+        expect(subject.entry_station).to eq station
       end
 
     end
@@ -53,15 +61,22 @@ describe Oystercard do
 
       it 'should not be in journey after touched out' do
         subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in
+        subject.touch_in(station)
         subject.touch_out
         expect(subject).not_to be_in_journey
       end
 
       it 'should reduce balance by minimum fare' do
         subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in
+        subject.touch_in(station)
         expect { subject.touch_out }.to change{subject.balance}.by(-Oystercard::MINIMUM_FARE)
+      end
+
+      it 'should not have an entry station after touched out' do
+        subject.top_up(Oystercard::MAXIMUM_BALANCE)
+        subject.touch_in(station)
+        subject.touch_out
+        expect(subject.entry_station).to eq nil
       end
 
     end
