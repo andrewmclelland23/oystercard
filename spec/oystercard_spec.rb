@@ -3,20 +3,25 @@ require 'oystercard'
 describe Oystercard do
 
   let(:station) { double :station }
+  let(:station2) { double :station }
 
-    describe ':balance' do
+    describe '#initialize' do
 
-    it 'has a balance of 0 when initialized' do
-        expect(subject.balance).to eq 0
-    end
+      it 'has a balance of 0' do
+          expect(subject.balance).to eq 0
+      end
+
+      it 'has no journeys' do
+        expect(subject.journeys).to be_empty
+      end
 
     end
 
     describe '#top_up' do
 
         it 'adds money to the card' do
-            subject.top_up(10)
-            expect(subject.balance).to eq 10
+            subject.top_up(Oystercard::MAXIMUM_BALANCE)
+            expect(subject.balance).to eq Oystercard::MAXIMUM_BALANCE
         end
 
         it 'raises exception when balance would go above maximum' do
@@ -34,7 +39,7 @@ describe Oystercard do
 
     describe '#touch_in' do
 
-            it 'should be in journey when touched in' do
+      it 'should be in journey when touched in' do
         subject.top_up(Oystercard::MAXIMUM_BALANCE)
         subject.touch_in(station)
         expect(subject).to be_in_journey
@@ -49,36 +54,53 @@ describe Oystercard do
         expect { subject.touch_in(station) }.to raise_error 'Insufficient funds'
       end
 
-      it 'should store entry station' do
-        subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in(station)
-        expect(subject.entry_station).to eq station
-      end
+      # it 'should store entry station' do
+      #   subject.top_up(Oystercard::MAXIMUM_BALANCE)
+      #   subject.touch_in(station)
+      #   expect(subject.entry_station).to eq station
+      # end
 
     end
 
     describe '#touch_out' do
 
-      it 'should not be in journey after touched out' do
+      before(:each) do
         subject.top_up(Oystercard::MAXIMUM_BALANCE)
         subject.touch_in(station)
-        subject.touch_out
+      end
+
+      it 'should not be in journey after touched out' do
+        subject.touch_out(station2)
         expect(subject).not_to be_in_journey
       end
 
       it 'should reduce balance by minimum fare' do
-        subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in(station)
-        expect { subject.touch_out }.to change{subject.balance}.by(-Oystercard::MINIMUM_FARE)
+        expect { subject.touch_out(station2) }.to change{subject.balance}.by(-Oystercard::MINIMUM_FARE)
       end
 
       it 'should not have an entry station after touched out' do
-        subject.top_up(Oystercard::MAXIMUM_BALANCE)
-        subject.touch_in(station)
-        subject.touch_out
+        subject.touch_out(station2)
         expect(subject.entry_station).to eq nil
       end
 
+      # it 'should store exit station' do
+      #   subject.touch_out(station2)
+      #   expect(subject.exit_station).to eq station2
+      # end
+
+    end
+
+    describe '#store_journey' do
+
+      before(:each) do
+        subject.top_up(Oystercard::MAXIMUM_BALANCE)
+        subject.touch_in(station)
+      end
+
+      it 'stores the entry and exit station when touching out' do
+        subject.touch_out(station2)
+        expect(subject.journeys).to eq [ {entry: station, exit: station2} ]
+      end
     end
 
 end
