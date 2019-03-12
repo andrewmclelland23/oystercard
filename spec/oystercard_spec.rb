@@ -30,4 +30,31 @@ describe Oystercard do
       end
     end
 
+    describe '#in_journey?' do
+
+      it 'should return false if oystercard has just been created' do
+        expect(subject).not_to be_in_journey
+      end
+
+    end
+
+    describe '#touch_in' do
+
+      it 'should be in journey when touched in' do
+        subject.touch_in
+        expect(subject).to be_in_journey
+      end
+
+    end
+
+    describe '#touch_out' do
+
+      it 'should not be in journey after touched out' do
+        subject.touch_in
+        subject.touch_out
+        expect(subject).not_to be_in_journey
+      end
+
+    end
+
 end
