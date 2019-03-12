@@ -22,14 +22,6 @@ describe Oystercard do
         end
     end
 
-    describe '#deduct' do
-
-      it 'deducts money from the card' do
-        subject.top_up(20)
-        expect{ subject.deduct(3) }.to change{ subject.balance }.by(-3)
-      end
-    end
-
     describe '#in_journey?' do
 
       it 'should return false if oystercard has just been created' do
@@ -64,6 +56,12 @@ describe Oystercard do
         subject.touch_in
         subject.touch_out
         expect(subject).not_to be_in_journey
+      end
+
+      it 'should reduce balance by minimum fare' do
+        subject.top_up(Oystercard::MAXIMUM_BALANCE)
+        subject.touch_in
+        expect { subject.touch_out }.to change{subject.balance}.by(-Oystercard::MINIMUM_FARE)
       end
 
     end
